@@ -1,8 +1,9 @@
 #version 330
 
+const int SPLIT_NUMBER = 2;
+
 uniform sampler2D diffuseTex;
-//uniform sampler2D shadowTex; //Вариант 1
-uniform sampler2DShadow shadowTex; //Вариант 2
+uniform sampler2DShadow shadowTex[SPLIT_NUMBER]; //Вариант 2
 
 struct LightInfo
 {
@@ -15,8 +16,14 @@ uniform LightInfo light;
 
 in vec3 normalCamSpace; //нормаль в системе координат камеры (интерполирована между вершинами треугольника)
 in vec4 posCamSpace; //координаты вершины в системе координат камеры (интерполированы между вершинами треугольника)
+
+struct ShadowCoords
+{
+	vec4 coord[SPLIT_NUMBER];
+};
+
 in vec2 texCoord; //текстурные координаты (интерполирована между вершинами треугольника)
-in vec4 shadowTexCoord; //выходные текстурные координаты для проективное текстуры
+in ShadowCoords shadowTexCoords; //выходные текстурные координаты для проективное текстуры
 
 out vec4 fragColor; //выходной цвет фрагмента
 
@@ -25,49 +32,38 @@ const float shininess = 128.0;
 
 void main()
 {
-/*  Вариант 1: 
-		
-	vec4 shadowCoords = shadowTexCoord;		
-	shadowCoords.xyz /= shadowCoords.w;
 
-	float fragDepth = shadowCoords.z; //глубина фрагмента в пространстве источника света
-	float shadowDepth = texture(shadowTex, shadowCoords.xy).r; //глубина ближайшего фрагмента в пространстве источника света
-
-	float visibility = 1.0;
-	if (fragDepth > shadowDepth)
-	{
-		visibility = 0.0;
-	}
-	
- */
-	
 /*  Вариант 2: */
 
-	float visibility = textureProj(shadowTex, shadowTexCoord); //глубина ближайшего фрагмента в пространстве источника света
-	
+	float visibility = 0.0;
+	for (int i = 0; i < SPLIT_NUMBER; ++i) {
+		visibility += textureProj(shadowTex[i], shadowTexCoords.coord[i]); //глубина ближайшего фрагмента в пространстве источника света
+	}
+	visibility = round(visibility / SPLIT_NUMBER);
+
 /**/
-	
+
 	//===============================
-	
+
 	vec3 diffuseColor = texture(diffuseTex, texCoord).rgb;
 
 	vec3 normal = normalize(normalCamSpace); //нормализуем нормаль после интерполяции
 	vec3 viewDirection = normalize(-posCamSpace.xyz); //направление на виртуальную камеру (она находится в точке (0.0, 0.0, 0.0))
-	
-	vec3 lightDirCamSpace = normalize(light.pos - posCamSpace.xyz); //направление на источник света	
+
+	vec3 lightDirCamSpace = normalize(light.pos - posCamSpace.xyz); //направление на источник света
 
 	float NdotL = max(dot(normal, lightDirCamSpace.xyz), 0.0); //скалярное произведение (косинус)
 
 	vec3 color = diffuseColor * (light.La + light.Ld * NdotL * visibility);
 
 	if (NdotL > 0.0)
-	{			
+	{
 		vec3 halfVector = normalize(lightDirCamSpace.xyz + viewDirection); //биссектриса между направлениями на камеру и на источник света
 
-		float blinnTerm = max(dot(normal, halfVector), 0.0); //интенсивность бликового освещения по Блинну				
+		float blinnTerm = max(dot(normal, halfVector), 0.0); //интенсивность бликового освещения по Блинну
 		blinnTerm = pow(blinnTerm, shininess); //регулируем размер блика
 		color += light.Ls * Ks * blinnTerm * visibility;
 	}
-	
+
 	fragColor = vec4(color, 1.0);
 }

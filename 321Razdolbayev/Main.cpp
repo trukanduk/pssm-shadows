@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string>
 
 struct LightInfo
 {
@@ -21,6 +22,8 @@ struct LightInfo
 class SampleApplication : public Application
 {
 public:
+    enum { SPLIT_NUMBER = 2 };
+
 	Mesh cube;
 	Mesh sphere;
 	Mesh bunny;
@@ -46,7 +49,7 @@ public:
 	float _theta;
 
 	LightInfo _light;
-    CameraInfo _lightCamera;
+    CameraInfo _lightCamera[SPLIT_NUMBER];
 
 	GLuint _worldTexId;
 	GLuint _brickTexId;
@@ -61,11 +64,11 @@ public:
     GLuint _depthSamplerLinear;
 
     GLuint _framebufferId;
-    GLuint _depthTexId;
+    GLuint _depthTexId[SPLIT_NUMBER];
     unsigned int _fbWidth;
     unsigned int _fbHeight;
 
-    bool _showDepthQuad;
+    int _showDepthQuad;
     bool _isLinearSampler;
     bool _cullFrontFaces;
     bool _randomPoints;
@@ -82,21 +85,25 @@ public:
 
 
         ////Создаем текстуру, куда будем впоследствии копировать буфер глубины
-        glGenTextures(1, &_depthTexId);
-        glBindTexture(GL_TEXTURE_2D, _depthTexId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, _fbWidth, _fbHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depthTexId, 0);
+        glGenTextures(SPLIT_NUMBER, &_depthTexId[0]);
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            glBindTexture(GL_TEXTURE_2D, _depthTexId[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, _fbWidth, _fbHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+            // glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depthTexId[index], 0);
+
+        }
 
 
         //Указываем куда именно мы будем рендерить
         GLenum buffers[] = { GL_NONE };
         glDrawBuffers(1, buffers);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            std::cerr << "Failed to setup framebuffer\n";
-            exit(1);
-        }
+        // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        // {
+        //     std::cerr << "Failed to setup framebuffer\n";
+        //     exit(1);
+        // }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -105,7 +112,7 @@ public:
 	{
 		Application::makeScene();
 
-        _showDepthQuad = false;
+        _showDepthQuad = -1;
         _isLinearSampler = false;
         _cullFrontFaces = false;
         _randomPoints = false;
@@ -139,7 +146,10 @@ public:
 		_quadShader.createProgram("shaders/quadDepth.vert", "shaders/quadDepth.frag");
         _renderToShadowMapShader.createProgram("shaders/toshadow.vert", "shaders/toshadow.frag");
         _commonWithShadowsShader.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
-        _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow2.frag");
+
+        // :TODO: fix shader2.frag shader
+        _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
+        // _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow2.frag");
 
 		//=========================================================
 		//Инициализация значений переменных освщения
@@ -221,9 +231,21 @@ public:
 
         if (action == GLFW_PRESS)
         {
-            if (key == GLFW_KEY_Z)
+            if (key == GLFW_KEY_1)
             {
-                _showDepthQuad = !_showDepthQuad;
+                _showDepthQuad = (_showDepthQuad == 0 ? -1 : 0);
+            }
+            if (key == GLFW_KEY_2)
+            {
+                _showDepthQuad = (_showDepthQuad == 1 ? -1 : 1);
+            }
+            if (key == GLFW_KEY_3)
+            {
+                _showDepthQuad = (_showDepthQuad == 2 ? -1 : 2);
+            }
+            if (key == GLFW_KEY_4)
+            {
+                _showDepthQuad = (_showDepthQuad == 3 ? -1 : 3);
             }
             else if (key == GLFW_KEY_L)
             {
@@ -233,7 +255,7 @@ public:
             {
                 _cullFrontFaces = !_cullFrontFaces;
             }
-            else if (key == GLFW_KEY_1)
+            else if (key == GLFW_KEY_P)
             {
                 _randomPoints = !_randomPoints;
             }
@@ -244,26 +266,34 @@ public:
     {
         Application::update();
 
-        _light.position = glm::vec3(glm::cos(_phi) * glm::cos(_theta), glm::sin(_phi) * glm::cos(_theta), glm::sin(_theta)) * (float)_lr;
-        _lightCamera.viewMatrix = glm::lookAt(_light.position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        _lightCamera.projMatrix = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 30.f);
+        // :TODO: make different viewports
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            _light.position = glm::vec3(glm::cos(_phi) * glm::cos(_theta), glm::sin(_phi) * glm::cos(_theta), glm::sin(_theta)) * (float)_lr;
+            _lightCamera[i].viewMatrix = glm::lookAt(_light.position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            _lightCamera[i].projMatrix = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 30.f);
+        }
     }
 
     virtual void draw()
     {
-        drawToShadowMap(_lightCamera);
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            drawToShadowMap(_lightCamera[i], i);
+        }
         drawToScreen(_randomPoints ? _commonWithShadowsShaderVar2 : _commonWithShadowsShader, _camera, _lightCamera);
 
-        if (_showDepthQuad)
+        if (_showDepthQuad >= 0)
         {
-            drawDebug();
+            drawDebug(_showDepthQuad);
         }
     }
 
-    void drawToShadowMap(const CameraInfo& lightCamera)
+    void drawToShadowMap(const CameraInfo& lightCamera, int index)
     {
         //=========== Сначала подключаем фреймбуфер и рендерим в текстуру ==========
         glBindFramebuffer(GL_FRAMEBUFFER, _framebufferId);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depthTexId[index], 0);
 
         glViewport(0, 0, _fbWidth, _fbHeight);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -289,7 +319,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0); //Отключаем фреймбуфер
     }
 
-    void drawToScreen(const ShaderProgram& shader, const CameraInfo& camera, const CameraInfo& lightCamera)
+    void drawToScreen(const ShaderProgram& shader, const CameraInfo& camera, const CameraInfo lightCamera[SPLIT_NUMBER])
 	{
 		//Получаем текущие размеры экрана и выставлям вьюпорт
 		int width, height;
@@ -311,12 +341,13 @@ public:
         shader.setVec3Uniform("light.Ld", _light.diffuse);
         shader.setVec3Uniform("light.Ls", _light.specular);
 
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
         {
-            shader.setMat4Uniform("lightViewMatrix", lightCamera.viewMatrix);
-            shader.setMat4Uniform("lightProjectionMatrix", lightCamera.projMatrix);
+            shader.setMat4Uniform(arrItemName("lightViewMatrix", i).c_str(), lightCamera[i].viewMatrix);
+            shader.setMat4Uniform(arrItemName("lightProjectionMatrix", i).c_str(), lightCamera[i].projMatrix);
 
             glm::mat4 projScaleBiasMatrix = glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.5, 0.5, 0.5)), glm::vec3(0.5, 0.5, 0.5));
-            shader.setMat4Uniform("lightScaleBiasMatrix", projScaleBiasMatrix);
+            shader.setMat4Uniform(arrItemName("lightScaleBiasMatrix", i).c_str(), projScaleBiasMatrix);
         }
 
         glActiveTexture(GL_TEXTURE0);  //текстурный юнит 0
@@ -324,11 +355,14 @@ public:
         glBindSampler(0, _sampler);
         shader.setIntUniform("diffuseTex", 0);
 
-        glActiveTexture(GL_TEXTURE1);  //текстурный юнит 1
-        glBindTexture(GL_TEXTURE_2D, _depthTexId);
-        glBindSampler(1, _isLinearSampler ? _depthSamplerLinear : _depthSampler);
-        shader.setIntUniform("shadowTex", 1);
-
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            static GLenum TEX_UNITS[] = { GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE2, GL_TEXTURE3 };
+            glActiveTexture(TEX_UNITS[i]);  //текстурный юнит i
+            glBindTexture(GL_TEXTURE_2D, _depthTexId[i]);
+            glBindSampler(i + 1, _isLinearSampler ? _depthSamplerLinear : _depthSampler);
+            shader.setIntUniform(arrItemName("shadowTex", i).c_str(), i + 1);
+        }
 
         drawScene(shader, camera);
 
@@ -373,14 +407,14 @@ public:
         bunny.draw();
     }
 
-    void drawDebug()
+    void drawDebug(int bufferInd)
     {
         glViewport(0, 0, 500, 500);
 
         _quadShader.use();
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _depthTexId);
+        glBindTexture(GL_TEXTURE_2D, _depthTexId[bufferInd]);
         glBindSampler(0, _sampler);
         _quadShader.setIntUniform("tex", 0);
 
@@ -388,6 +422,12 @@ public:
 
         glBindSampler(0, 0);
         glUseProgram(0);
+    }
+
+private:
+    static std::string arrItemName(const std::string& name, int ind)
+    {
+        return name + "[" + std::to_string(ind) + "]";
     }
 };
 
