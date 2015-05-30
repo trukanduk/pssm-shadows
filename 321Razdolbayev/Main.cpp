@@ -143,7 +143,7 @@ public:
 		cube.makeCube(0.5);
 		cube.modelMatrix() = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.5f));
 
-		sphere.makeSphere(0.5, 100);
+		sphere.makeSphere(0.5);
 		sphere.modelMatrix() = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.5f));
 
 		bunny.loadFromFile("models/bunny.obj");
@@ -367,14 +367,13 @@ public:
                     light2center - boundRadius, light2center + boundRadius);
 
             _lightBound[i].makeViewVolume(_light.position,
-                                          glm::vec3(0.0f, 0.0f, 0.0f),
+                                          boundCenter,
                                           glm::vec3(0.0f, 1.0f, 0.0f),
                                           viewAngle,
                                           1.0,
                                           light2center - boundRadius,
                                           light2center + boundRadius);
-
-            // _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 100.0f);
+            // _lightBound[i].makeSphere(boundRadius, boundCenter);
         }
     }
 
