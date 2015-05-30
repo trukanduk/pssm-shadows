@@ -13,6 +13,7 @@ SET(HEADER_FILES
 	Mesh.h
 	ShaderProgram.h
 	Texture.h
+	BoundingBox.h
 )
 
 SET(SHADER_FILES
@@ -38,6 +39,7 @@ SET(SHADER_FILES
 	shaders/shadow.vert
 	shaders/shadow.frag
 	shaders/shadow2.frag
+	shaders/shadowd.frag
 
 	shaders/togbuffer.vert
 	shaders/togbuffer.frag
