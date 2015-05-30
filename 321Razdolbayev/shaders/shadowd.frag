@@ -34,7 +34,7 @@ void main()
 {
 
 	float visibility = 1.0;
-	for (int i = 1; i < SPLIT_NUMBER; ++i) {
+	for (int i = 0; i < SPLIT_NUMBER; ++i) {
 		vec4 shadowCoords = shadowTexCoords.coord[i];
 		shadowCoords.xyzw /= shadowCoords.w;
 
@@ -44,14 +44,21 @@ void main()
 			visibility = textureProj(shadowTex[i], shadowCoords); //глубина ближайшего фрагмента в пространстве источника света
 
 			if (i == 0)
-				fragColor = vec4(1, 0, 0, 1);
+				fragColor.r = 1.0;
 			else if (i == 1)
-				fragColor = vec4(0, 1, 0, 1);
+				fragColor.g = 1.0;
 			else
-				fragColor = vec4(0, 0, 1, 1);
-			return;
+				fragColor.b = 1.0;
+		} else {
+			if (i == 0)
+				fragColor.r = 0.0;
+			else if (i == 1)
+				fragColor.g = 0.0;
+			else
+				fragColor.b = 0.0;
 		}
 	}
+	fragColor.a = 1.0;
 	// visibility = round(visibility / SPLIT_NUMBER);
 
 }
