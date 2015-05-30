@@ -86,6 +86,13 @@ protected:
 	double _thetaAng;
 	double _r;
 
+	bool _useDebugCamera;
+
+	//Положение дебагокамеры
+	double _dphiAng;
+	double _dthetaAng;
+	double _dr;
+
 	double _oldTime; //Время на предыдущем кадре
 
 	//Вспомогальные переменные для управления виртуальной камерой

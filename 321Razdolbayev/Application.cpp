@@ -8,7 +8,7 @@
 //======================================
 
 const float Application::NEAR_PLANE = 0.1f;
-const float Application::FAR_PLANE = 10.0f;
+const float Application::FAR_PLANE = 30.0f;
 const float Application::VIEW_ANGLE = 45.0f;
 
 //Функция обратного вызова для обработки нажатий на клавиатуре
@@ -51,7 +51,8 @@ _oldTime(0.0),
 	_thetaAng(0.0),
 	_radiusInc(false),
 	_radiusDec(false),
-	_r(5.0)
+	_r(5.0),
+	_useDebugCamera(false)
 {
 }
 
@@ -187,6 +188,13 @@ void Application::handleKey(int key, int scancode, int action, int mods)
 		{
 			_radiusDec = true;
 		}
+		else if (key == GLFW_KEY_P)
+		{
+			_useDebugCamera = !_useDebugCamera;
+			_dr = _r;
+			_dphiAng = _phiAng;
+			_dthetaAng = _thetaAng;
+		}
 	}
 	else if (action == GLFW_RELEASE)
 	{
@@ -224,35 +232,39 @@ void Application::update()
 
 	double speed = 1.0;
 
+	double& phiAng = _useDebugCamera ? _dphiAng : _phiAng;
+	double& thetaAng = _useDebugCamera ? _dthetaAng : _thetaAng;
+	double& r = _useDebugCamera ? _dr : _r;
+
 	if (_rotateLeft)
 	{
-		_phiAng -= speed * dt;
+		phiAng -= speed * dt;
 	}
 	if (_rotateRight)
 	{
-		_phiAng += speed * dt;
+		phiAng += speed * dt;
 	}
 	if (_rotateUp)
 	{
-		_thetaAng += speed * dt;
+		thetaAng += speed * dt;
 	}
 	if (_rotateDown)
 	{
-		_thetaAng -= speed * dt;
+		thetaAng -= speed * dt;
 	}
 	if (_radiusInc)
 	{
-		_r += _r * dt;
+		r += r * dt;
 	}
 	if (_radiusDec)
 	{
-		_r -= _r * dt;
+		r -= r * dt;
 	}
 
 	_thetaAng = glm::clamp(_thetaAng, -glm::pi<double>() * 0.49, glm::pi<double>() * 0.49);
 
 	//Вычисляем положение виртуальной камеры в мировой системе координат по формуле сферических координат
-	glm::vec3 pos = glm::vec3(glm::cos(_phiAng) * glm::cos(_thetaAng), glm::sin(_phiAng) * glm::cos(_thetaAng), glm::sin(_thetaAng) + 0.5f) * (float)_r;
+	glm::vec3 pos = glm::vec3(glm::cos(phiAng) * glm::cos(thetaAng), glm::sin(phiAng) * glm::cos(thetaAng), glm::sin(thetaAng) + 0.5f) * (float)_r;
 
 	//Обновляем матрицу вида
 	_camera.viewMatrix = glm::lookAt(pos, glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f));
