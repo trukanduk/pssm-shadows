@@ -51,6 +51,7 @@ public:
     ShaderProgram _renderToShadowMapShader;
     ShaderProgram _commonWithShadowsShader;
     ShaderProgram _commonWithShadowsShaderVar2;
+    ShaderProgram _debugShader;
 
 	//Переменные для управления положением одного источника света
 	float _lr;
@@ -81,6 +82,7 @@ public:
     bool _isLinearSampler;
     bool _cullFrontFaces;
     bool _randomPoints;
+    bool _useDebugShader;
 
     void initFramebuffer()
     {
@@ -125,6 +127,7 @@ public:
         _isLinearSampler = false;
         _cullFrontFaces = false;
         _randomPoints = false;
+        _useDebugShader = false;
 
 		//=========================================================
 		//Создание и загрузка мешей
@@ -155,6 +158,7 @@ public:
 		_quadShader.createProgram("shaders/quadDepth.vert", "shaders/quadDepth.frag");
         _renderToShadowMapShader.createProgram("shaders/toshadow.vert", "shaders/toshadow.frag");
         _commonWithShadowsShader.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
+        _debugShader.createProgram("shaders/shadow.vert", "shaders/shadowd.frag");
 
         // :TODO: fix shader2.frag shader
         _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
@@ -268,6 +272,10 @@ public:
             {
                 _randomPoints = !_randomPoints;
             }
+            else if (key == GLFW_KEY_G)
+            {
+                _useDebugShader = !_useDebugShader;
+            }
         }
     }
 
@@ -299,8 +307,8 @@ public:
         // PROFIT!
         for (int i = 0; i < SPLIT_NUMBER; ++i)
         {
-            // float nearPlane = (FAR_PLANE - NEAR_PLANE) * i / SPLIT_NUMBER + NEAR_PLANE;
-            float nearPlane = NEAR_PLANE;
+            float nearPlane = (FAR_PLANE - NEAR_PLANE) * i / SPLIT_NUMBER + NEAR_PLANE;
+            // float nearPlane = NEAR_PLANE;
             float farPlane = (FAR_PLANE - NEAR_PLANE) * (i + 1) / SPLIT_NUMBER + NEAR_PLANE;
 
             float nearWidth = tan(VIEW_ANGLE / 2.0f) * nearPlane;
@@ -352,7 +360,11 @@ public:
 
             float viewAngle = std::atan2(boundRadius, distance(_light.position, upos))*2.0f;
             _lightCamera[i].viewMatrix = lookAt(_light.position, boundCenter, vec3(0.0f, 0.0f, 1.0f));
-            _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 30.f);
+
+            // float light2center = distance(boundCenter, _light.position);
+            // _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f,
+            //         light2center - boundRadius, light2center + boundRadius);
+            _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 100.0f);
         }
     }
 
@@ -362,7 +374,11 @@ public:
         {
             drawToShadowMap(_lightCamera[i], i);
         }
-        drawToScreen(_randomPoints ? _commonWithShadowsShaderVar2 : _commonWithShadowsShader, _camera, _lightCamera);
+        const ShaderProgram& shader =
+                (_useDebugShader ? _debugShader
+                                 : _randomPoints ? _commonWithShadowsShaderVar2
+                                                 : _commonWithShadowsShader);
+        drawToScreen(shader, _camera, _lightCamera);
 
         if (_showDepthQuad >= 0)
         {
