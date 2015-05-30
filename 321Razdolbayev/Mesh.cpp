@@ -28,7 +28,7 @@ Mesh::Mesh(GLuint primType,
 	init(primType, vertices, normals, texcoords);
 }
 
-void Mesh::makeSphere(float radius, int N)
+void Mesh::makeSphere(float radius, const glm::vec3& center, int N)
 {
 	int M = N / 2;
 
@@ -77,6 +77,12 @@ void Mesh::makeSphere(float radius, int N)
 		}
 	}
 
+	for (int i = 0; i*3 < vertices.size(); ++i)
+	{
+		vertices[i*3] += center.x;
+		vertices[i*3 + 1] += center.y;
+		vertices[i*3 + 2] += center.z;
+	}
 	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 

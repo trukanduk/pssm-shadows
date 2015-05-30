@@ -95,7 +95,8 @@ public:
 	/**
 	Инициализирует меш сферы
 	*/
-	void makeSphere(float radius, int N = 100);
+	void makeSphere(float radius, const glm::vec3& center = glm::vec3(0.0f, 0.0f, 0.0f),
+					int N = 100);
 
 	/**
 	Инициализирует меш куба
