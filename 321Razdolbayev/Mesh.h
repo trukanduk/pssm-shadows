@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -20,7 +21,41 @@
 class Mesh
 {
 public:
+	/**
+	Вспомогательный класс для добавления вершинных атрибутов в буфер
+	*/
+	template <typename T>
+	class Buffer : public std::vector <T>
+	{
+	public:
+		void addVec2(T s, T t)
+		{
+			this->push_back(s);
+			this->push_back(t);
+		}
+
+		void addVec3(T x, T y, T z)
+		{
+			this->push_back(x);
+			this->push_back(y);
+			this->push_back(z);
+		}
+
+		void addVec4(T r, T g, T b, T a)
+		{
+			this->push_back(r);
+			this->push_back(g);
+			this->push_back(b);
+			this->push_back(a);
+		}
+	};
+
 	Mesh();
+
+	Mesh(GLuint primType,
+		 const std::vector<float>& vertices,
+		 const std::vector<float>& normals,
+		 const std::vector<float>& texcoords);
 
 	GLuint& primitiveType() { return _primitiveType; }
 
@@ -39,7 +74,7 @@ public:
 	/**
 	Инициализирует меш сферы
 	*/
-	void makeSphere(float radius, int N = 100);	
+	void makeSphere(float radius, int N = 100);
 
 	/**
 	Инициализирует меш куба
@@ -60,7 +95,13 @@ public:
 	/**
 	Загружает меш из внешнего файла с помощью библиотеки Assimp
 	*/
-	void loadFromFile(const std::string& filename);	
+	void loadFromFile(const std::string& filename);
+
+protected:
+	void init(GLuint aPrimitiveType,
+			  const std::vector<float>& vertices,
+			  const std::vector<float>& normals,
+			  const std::vector<float>& texcoords);
 
 protected:
 	GLuint _primitiveType;

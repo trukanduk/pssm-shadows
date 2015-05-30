@@ -10,35 +10,6 @@
 
 #include "Mesh.h"
 
-/**
-Вспомогательный класс для добавления вершинных атрибутов в буфер
-*/
-template <typename T>
-class Buffer : public std::vector < T >
-{
-public:
-	void addVec2(T s, T t)
-	{
-		this->push_back(s);
-		this->push_back(t);
-	}
-
-	void addVec3(T x, T y, T z)
-	{
-		this->push_back(x);
-		this->push_back(y);
-		this->push_back(z);
-	}
-
-	void addVec4(T r, T g, T b, T a)
-	{
-		this->push_back(r);
-		this->push_back(g);
-		this->push_back(b);
-		this->push_back(a);
-	}
-};
-
 //=========================================================
 
 Mesh::Mesh() :
@@ -48,9 +19,17 @@ _numVertices(0)
 {
 }
 
+Mesh::Mesh(GLuint primType,
+		   const std::vector<float>& vertices,
+		   const std::vector<float>& normals,
+		   const std::vector<float>& texcoords) :
+{
+	init(primType, vertices, normals, texcoords);
+}
+
 void Mesh::makeSphere(float radius, int N)
 {
-	int M = N / 2;	
+	int M = N / 2;
 
 	Buffer<float> vertices;
 	Buffer<float> normals;
@@ -97,26 +76,7 @@ void Mesh::makeSphere(float radius, int N)
 		}
 	}
 
-	vertices.insert(vertices.end(), normals.begin(), normals.end());
-	vertices.insert(vertices.end(), texcoords.begin(), texcoords.end());
-
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	_vao = 0;
-	glGenVertexArrays(1, &_vao);
-	glBindVertexArray(_vao);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4)); //сдвиг = число вершин * число компонентов (x, y, z) * размер одного компонента (float 4 байта)
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4 * 2));
-
-	glBindVertexArray(0);
+	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 
 void Mesh::makeCube(float size)
@@ -193,7 +153,7 @@ void Mesh::makeCube(float size)
 	//top 2
 	vertices.addVec3(-size, size, size);
 	vertices.addVec3(size, -size, size);
-	vertices.addVec3(-size, -size, size);	
+	vertices.addVec3(-size, -size, size);
 
 	normals.addVec3(0.0, 0.0, 1.0);
 	normals.addVec3(0.0, 0.0, 1.0);
@@ -201,7 +161,7 @@ void Mesh::makeCube(float size)
 
 	texcoords.addVec2(0.0, 1.0);
 	texcoords.addVec2(1.0, 0.0);
-	texcoords.addVec2(0.0, 0.0);	
+	texcoords.addVec2(0.0, 0.0);
 
 	//back 1
 	vertices.addVec3(-size, -size, size);
@@ -272,37 +232,16 @@ void Mesh::makeCube(float size)
 	vertices.addVec3(-size, size, -size);
 	vertices.addVec3(-size, -size, -size);
 	vertices.addVec3(size, -size, -size);
-	
+
 	normals.addVec3(0.0, 0.0, -1.0);
 	normals.addVec3(0.0, 0.0, -1.0);
 	normals.addVec3(0.0, 0.0, -1.0);
 
 	texcoords.addVec2(0.0, 1.0);
 	texcoords.addVec2(0.0, 0.0);
-	texcoords.addVec2(1.0, 0.0);	
+	texcoords.addVec2(1.0, 0.0);
 
-	vertices.insert(vertices.end(), normals.begin(), normals.end());
-	vertices.insert(vertices.end(), texcoords.begin(), texcoords.end());
-
-	_numVertices = 36;
-
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	_vao = 0;
-	glGenVertexArrays(1, &_vao);
-	glBindVertexArray(_vao);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4)); //сдвиг = число вершин * число компонентов (x, y, z) * размер одного компонента (float 4 байта)
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4 * 2));
-
-	glBindVertexArray(0);
+	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 
 void Mesh::makeScreenAlignedQuad()
@@ -368,28 +307,7 @@ void Mesh::makeGroundPlane(float size, float numTiles)
 	texcoords.addVec2(numTiles, -numTiles);
 	texcoords.addVec2(-numTiles, -numTiles);
 
-	vertices.insert(vertices.end(), normals.begin(), normals.end());
-	vertices.insert(vertices.end(), texcoords.begin(), texcoords.end());
-
-	_numVertices = 6;
-
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	_vao = 0;
-	glGenVertexArrays(1, &_vao);
-	glBindVertexArray(_vao);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4 * 2));
-
-	glBindVertexArray(0);
+	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 
 
@@ -457,13 +375,33 @@ void Mesh::loadFromFile(const std::string& filename)
 
 	aiReleaseImport(scene);
 
-	vertices.insert(vertices.end(), normals.begin(), normals.end());
-	vertices.insert(vertices.end(), texcoords.begin(), texcoords.end());
+	init(GL_TRIANGLES, vertices, normals, texcoords);
+}
+
+void Mesh::draw()
+{
+	glBindVertexArray(_vao);
+	glDrawArrays(_primitiveType, 0, _numVertices);
+}
+
+
+void Mesh::init(GLuint primType,
+				const std::vector<float>& vertices,
+				const std::vector<float>& normals,
+				const std::vector<float>& texcoords)
+{
+	std::vector<float> buffer(vertices.size() + normals.size() + texcoords.size());
+	std::copy(vertices.begin(), vertices.end(), buffer.begin());
+	std::copy(normals.begin(), normals.end(), buffer.begin() + vertices.size());
+	std::copy(texcoords.begin(), texcoords.end(),
+			  buffer.begin() + vertices.size() + normals.size());
+
+	_numVertices = vertices.size()/3;
 
 	GLuint vbo = 0;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(float), buffer.data(), GL_STATIC_DRAW);
 
 	_vao = 0;
 	glGenVertexArrays(1, &_vao);
@@ -473,14 +411,8 @@ void Mesh::loadFromFile(const std::string& filename)
 	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4)); //сдвиг = число вершин * число компонентов (x, y, z) * размер одного компонента (float 4 байта)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4));
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4 * 2));
 
 	glBindVertexArray(0);
-}
-
-void Mesh::draw()
-{
-	glBindVertexArray(_vao);
-	glDrawArrays(_primitiveType, 0, _numVertices);
 }
