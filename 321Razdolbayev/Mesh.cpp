@@ -318,7 +318,7 @@ void Mesh::makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const g
 	using namespace glm;
 
 	Buffer<float> vertices;
-	// нормали и текстуры не нужны
+	// текстуры не нужны
 
     vec3 uz = normalize(center - pos);
     vec3 ux = normalize(cross(uz, up));
@@ -331,86 +331,38 @@ void Mesh::makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const g
     float farHeight = farWidth*aspect;
 
     // side planes
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
 
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
     vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
     vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+
+    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
     vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
 
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
     vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+
+    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
     vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
 
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
 
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
 
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-
-
-
-
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-
- //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
- //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
- //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-
- //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
- //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
- //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-
- //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
- //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
- //    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-
- //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
- //    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
- //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-
-	// vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
- //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
- //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-
-	// vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
- //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
- //    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-
-    // // near plane
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-
-    // // far plane
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
 
     init(GL_TRIANGLES, vertices);
 }
