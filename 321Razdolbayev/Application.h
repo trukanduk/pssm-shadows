@@ -25,6 +25,10 @@ public:
 	static const float FAR_PLANE;
 	static const float VIEW_ANGLE;
 
+	static const float NEAR_PLANED;
+	static const float FAR_PLANED;
+	static const float VIEW_ANGLED;
+
 	Application();
 	~Application();
 

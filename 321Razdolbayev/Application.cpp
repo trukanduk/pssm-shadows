@@ -11,6 +11,10 @@ const float Application::NEAR_PLANE = 0.1f;
 const float Application::FAR_PLANE = 30.0f;
 const float Application::VIEW_ANGLE = 45.0f;
 
+const float Application::NEAR_PLANED = 0.1f;
+const float Application::FAR_PLANED = 100.0f;
+const float Application::VIEW_ANGLED = 45.0f;
+
 //Функция обратного вызова для обработки нажатий на клавиатуре
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -264,7 +268,7 @@ void Application::update()
 	_thetaAng = glm::clamp(_thetaAng, -glm::pi<double>() * 0.49, glm::pi<double>() * 0.49);
 
 	//Вычисляем положение виртуальной камеры в мировой системе координат по формуле сферических координат
-	glm::vec3 pos = glm::vec3(glm::cos(phiAng) * glm::cos(thetaAng), glm::sin(phiAng) * glm::cos(thetaAng), glm::sin(thetaAng) + 0.5f) * (float)_r;
+	glm::vec3 pos = glm::vec3(glm::cos(phiAng) * glm::cos(thetaAng), glm::sin(phiAng) * glm::cos(thetaAng), glm::sin(thetaAng) + 0.5f) * (float)r;
 
 	//Обновляем матрицу вида
 	_camera.viewMatrix = glm::lookAt(pos, glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -276,5 +280,10 @@ void Application::update()
 	glfwGetFramebufferSize(_window, &width, &height);
 
 	//Обновляем матрицу проекции на случай, если размеры окна изменились
-	_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLE), (float)width / height, NEAR_PLANE, FAR_PLANE);
+	if (_useDebugCamera)
+		_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLED),
+											 (float)width / height, NEAR_PLANED, FAR_PLANED);
+	else
+		_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLE),
+											 (float)width / height, NEAR_PLANE, FAR_PLANE);
 }
