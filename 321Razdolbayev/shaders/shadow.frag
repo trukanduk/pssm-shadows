@@ -35,11 +35,19 @@ void main()
 
 /*  Вариант 2: */
 
-	float visibility = 0.0;
+	float visibility = 1.0;
 	for (int i = 0; i < SPLIT_NUMBER; ++i) {
-		visibility += textureProj(shadowTex[i], shadowTexCoords.coord[i]); //глубина ближайшего фрагмента в пространстве источника света
+		vec4 shadowCoords = shadowTexCoords.coord[i];
+		shadowCoords.xyz /= shadowCoords.w;
+
+		if (shadowCoords.x >= 0.0 && shadowCoords.x <= 1.0 &&
+			shadowCoords.y >= 0.0 && shadowCoords.y <= 1.0)
+		{
+			visibility += textureProj(shadowTex[i], shadowTexCoords.coord[i]); //глубина ближайшего фрагмента в пространстве источника света
+		}
+
 	}
-	visibility = round(visibility / SPLIT_NUMBER);
+	visibility = round(visibility / (SPLIT_NUMBER + 1));
 
 /**/
 

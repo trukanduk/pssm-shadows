@@ -8,6 +8,15 @@
 #include <vector>
 #include <string>
 
+namespace std {
+
+std::ostream& operator <<(std::ostream& out, const glm::vec3& v)
+{
+    return out << "vec3(" << v.x << ", " << v.y << ", " << v.z << ")";
+}
+
+}
+
 struct LightInfo
 {
 	glm::vec3 position; //Будем здесь хранить координаты в мировой системе координат, а при копировании в юниформ-переменную конвертировать в систему виртуальной камеры
@@ -264,14 +273,86 @@ public:
 
     void update()
     {
+        using namespace glm;
+
         Application::update();
 
-        // :TODO: make different viewports
+        _light.position = vec3(cos(_phi) * cos(_theta), sin(_phi) * cos(_theta), sin(_theta)) * (float)_lr;
+
+        int wwidth, wheight;
+        glfwGetFramebufferSize(_window, &wwidth, &wheight);
+
+        float aspect = 1.0f * wwidth / wheight;
+
+        vec3 upos = vec3(cos(_phiAng) * cos(_thetaAng), sin(_phiAng) * cos(_thetaAng), sin(_thetaAng)) * (float)_r;
+        vec3 uy = vec3(0.0f, 1.0f, 0.0f);
+        vec3 uz = normalize(-upos);
+        vec3 ux = cross(uz, uy);
+        uy = cross(ux, uz);
+
+        // Берём пирамиду обзора пользователя, разбиваем её на SPLIT_NUMBER кусков.
+        // Сейчас на равные, но вообще их надо разбивать более интеллектуально
+        // Для каждого куска считаем его bounding box, из него -- bounding sphere
+        // Далее подгоняем такой конус обзора из источника света, чтобы эта сфера
+        // gолностью в него попадала. описываем этот конус пирамидой и
+        // подгоняем model-view-projection матрицы для источника света
+        // PROFIT!
         for (int i = 0; i < SPLIT_NUMBER; ++i)
         {
-            _light.position = glm::vec3(glm::cos(_phi) * glm::cos(_theta), glm::sin(_phi) * glm::cos(_theta), glm::sin(_theta)) * (float)_lr;
-            _lightCamera[i].viewMatrix = glm::lookAt(_light.position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-            _lightCamera[i].projMatrix = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 30.f);
+            // float nearPlane = (FAR_PLANE - NEAR_PLANE) * i / SPLIT_NUMBER + NEAR_PLANE;
+            float nearPlane = NEAR_PLANE;
+            float farPlane = (FAR_PLANE - NEAR_PLANE) * (i + 1) / SPLIT_NUMBER + NEAR_PLANE;
+
+            float nearWidth = tan(VIEW_ANGLE / 2.0f) * nearPlane;
+            float nearHeight = nearWidth*aspect;
+            float farWidth = tan(VIEW_ANGLE / 2.0f) * farPlane;
+            float farHeight = farWidth*aspect;
+
+            // Прикинем Bounding box.
+            vec3 minVec = upos + uz*nearPlane;
+            vec3 maxVec = upos + uz*nearPlane;
+
+            for (unsigned vi = 0; vi < 4; ++vi)
+            {
+                vec2 planepos(((vi & 0x2) >> 1)*2.0f - 1.0f, (vi & 0x1)*2.0f - 1.0f);
+
+                vec3 v1 = upos + uz*nearPlane + planepos.x*ux*nearWidth + planepos.y*uy*nearHeight;
+                if (minVec.x > v1.x)
+                    minVec.x = v1.x;
+                if (minVec.y > v1.y)
+                    minVec.y = v1.y;
+                if (minVec.z > v1.z)
+                    minVec.z = v1.z;
+
+                if (maxVec.x < v1.x)
+                    maxVec.x = v1.x;
+                if (maxVec.y < v1.y)
+                    maxVec.y = v1.y;
+                if (maxVec.z < v1.z)
+                    maxVec.z = v1.z;
+
+                vec3 v2 = upos + uz*farPlane + planepos.x*ux*farWidth + planepos.y*uy*farHeight;
+                if (minVec.x > v2.x)
+                    minVec.x = v2.x;
+                if (minVec.y > v2.y)
+                    minVec.y = v2.y;
+                if (minVec.z > v2.z)
+                    minVec.z = v2.z;
+
+                if (maxVec.x < v2.x)
+                    maxVec.x = v2.x;
+                if (maxVec.y < v2.y)
+                    maxVec.y = v2.y;
+                if (maxVec.z < v2.z)
+                    maxVec.z = v2.z;
+            }
+
+            vec3 boundCenter = (minVec + maxVec) / 2.0f;
+            float boundRadius = distance(minVec, maxVec) / 2.0f;
+
+            float viewAngle = std::atan2(boundRadius, distance(_light.position, upos))*2.0f;
+            _lightCamera[i].viewMatrix = lookAt(_light.position, boundCenter, vec3(0.0f, 0.0f, 1.0f));
+            _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 30.f);
         }
     }
 

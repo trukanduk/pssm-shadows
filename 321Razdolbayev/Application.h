@@ -21,13 +21,17 @@ struct CameraInfo
 class Application
 {
 public:
+	static const float NEAR_PLANE;
+	static const float FAR_PLANE;
+	static const float VIEW_ANGLE;
+
 	Application();
 	~Application();
 
 	/**
 	Запускает приложение
 	*/
-	void start();	
+	void start();
 
 	/**
 	Обрабатывает нажатия кнопок на клавитуре.
@@ -69,12 +73,12 @@ protected:
 	/**
 	Отрисовывает один кадр
 	*/
-	virtual void draw() = 0;	
+	virtual void draw() = 0;
 
 	//---------------------------------------------
 
 	GLFWwindow* _window; //Графичекое окно
-	
+
 	CameraInfo _camera;
 
 	//Положение виртуальный камеры задается в сферических координат
@@ -86,7 +90,7 @@ protected:
 
 	//Вспомогальные переменные для управления виртуальной камерой
 	bool _rotateLeft;
-	bool _rotateRight;	
+	bool _rotateRight;
 	bool _rotateUp;
 	bool _rotateDown;
 	bool _radiusInc;

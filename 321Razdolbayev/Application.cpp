@@ -7,6 +7,10 @@
 
 //======================================
 
+const float Application::NEAR_PLANE = 0.1f;
+const float Application::FAR_PLANE = 10.0f;
+const float Application::VIEW_ANGLE = 45.0f;
+
 //Функция обратного вызова для обработки нажатий на клавиатуре
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -109,7 +113,7 @@ void Application::initGL()
 	std::cout << "OpenGL version supported: " << version << std::endl;
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);	
+	glDepthFunc(GL_LESS);
 }
 
 void Application::initGUI()
@@ -120,7 +124,7 @@ void Application::initGUI()
 #ifdef USE_CORE_PROFILE
 	TwInit(TW_OPENGL_CORE, NULL);
 #else
-	TwInit(TW_OPENGL, NULL);	
+	TwInit(TW_OPENGL, NULL);
 #endif
 
 	TwWindowSize(width, height);
@@ -257,8 +261,8 @@ void Application::update()
 	//-----------------------------------------
 
 	int width, height;
-	glfwGetFramebufferSize(_window, &width, &height);	
+	glfwGetFramebufferSize(_window, &width, &height);
 
 	//Обновляем матрицу проекции на случай, если размеры окна изменились
-	_camera.projMatrix = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.f);
+	_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLE), (float)width / height, NEAR_PLANE, FAR_PLANE);
 }
