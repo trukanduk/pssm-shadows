@@ -2,11 +2,13 @@
 #include "Mesh.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
+#include "BoundingBox.h"
 
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
+
 
 namespace std {
 
@@ -52,6 +54,7 @@ public:
     ShaderProgram _commonWithShadowsShader;
     ShaderProgram _commonWithShadowsShaderVar2;
     ShaderProgram _debugShader;
+    ShaderProgram _boundsShader;
 
 	//Переменные для управления положением одного источника света
 	float _lr;
@@ -60,6 +63,7 @@ public:
 
 	LightInfo _light;
     CameraInfo _lightCamera[SPLIT_NUMBER];
+    Mesh _lightBound[SPLIT_NUMBER]; // Меши для отображения формы и расположения камер
 
 	GLuint _worldTexId;
 	GLuint _brickTexId;
@@ -83,6 +87,7 @@ public:
     bool _cullFrontFaces;
     bool _randomPoints;
     bool _useDebugShader;
+    bool _showLightBounds[SPLIT_NUMBER];
 
     void initFramebuffer()
     {
@@ -128,6 +133,9 @@ public:
         _cullFrontFaces = false;
         _randomPoints = false;
         _useDebugShader = false;
+        _showLightBounds[0] = false;
+        _showLightBounds[1] = false;
+        _showLightBounds[2] = false;
 
 		//=========================================================
 		//Создание и загрузка мешей
@@ -159,6 +167,7 @@ public:
         _renderToShadowMapShader.createProgram("shaders/toshadow.vert", "shaders/toshadow.frag");
         _commonWithShadowsShader.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
         _debugShader.createProgram("shaders/shadow.vert", "shaders/shadowd.frag");
+        _boundsShader.createProgram("shaders/marker.vert", "shaders/marker.frag");
 
         // :TODO: fix shader2.frag shader
         _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
@@ -260,6 +269,22 @@ public:
             {
                 _showDepthQuad = (_showDepthQuad == 3 ? -1 : 3);
             }
+            if (key == GLFW_KEY_5)
+            {
+                _showLightBounds[0] = !_showLightBounds[0];
+            }
+            if (key == GLFW_KEY_6)
+            {
+                _showLightBounds[1] = !_showLightBounds[1];
+            }
+            if (key == GLFW_KEY_7)
+            {
+                _showLightBounds[2] = !_showLightBounds[2];
+            }
+            if (key == GLFW_KEY_8)
+            {
+                _showLightBounds[3] = !_showLightBounds[3];
+            }
             else if (key == GLFW_KEY_L)
             {
                 _isLinearSampler = !_isLinearSampler;
@@ -320,51 +345,36 @@ public:
             vec3 minVec = upos + uz*nearPlane;
             vec3 maxVec = upos + uz*nearPlane;
 
-            for (unsigned vi = 0; vi < 4; ++vi)
-            {
-                vec2 planepos(((vi & 0x2) >> 1)*2.0f - 1.0f, (vi & 0x1)*2.0f - 1.0f);
+            BoundigBox bbox;
+            bbox.expand(upos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+            bbox.expand(upos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+            bbox.expand(upos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+            bbox.expand(upos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
 
-                vec3 v1 = upos + uz*nearPlane + planepos.x*ux*nearWidth + planepos.y*uy*nearHeight;
-                if (minVec.x > v1.x)
-                    minVec.x = v1.x;
-                if (minVec.y > v1.y)
-                    minVec.y = v1.y;
-                if (minVec.z > v1.z)
-                    minVec.z = v1.z;
+            bbox.expand(upos + uz*farPlane + ux*farWidth + uy*farHeight);
+            bbox.expand(upos + uz*farPlane + ux*farWidth - uy*farHeight);
+            bbox.expand(upos + uz*farPlane - ux*farWidth + uy*farHeight);
+            bbox.expand(upos + uz*farPlane - ux*farWidth - uy*farHeight);
 
-                if (maxVec.x < v1.x)
-                    maxVec.x = v1.x;
-                if (maxVec.y < v1.y)
-                    maxVec.y = v1.y;
-                if (maxVec.z < v1.z)
-                    maxVec.z = v1.z;
-
-                vec3 v2 = upos + uz*farPlane + planepos.x*ux*farWidth + planepos.y*uy*farHeight;
-                if (minVec.x > v2.x)
-                    minVec.x = v2.x;
-                if (minVec.y > v2.y)
-                    minVec.y = v2.y;
-                if (minVec.z > v2.z)
-                    minVec.z = v2.z;
-
-                if (maxVec.x < v2.x)
-                    maxVec.x = v2.x;
-                if (maxVec.y < v2.y)
-                    maxVec.y = v2.y;
-                if (maxVec.z < v2.z)
-                    maxVec.z = v2.z;
-            }
-
-            vec3 boundCenter = (minVec + maxVec) / 2.0f;
-            float boundRadius = distance(minVec, maxVec) / 2.0f;
+            vec3 boundCenter = bbox.getCenter();
+            float boundRadius = bbox.getRadius();
 
             float viewAngle = std::atan2(boundRadius, distance(_light.position, upos))*2.0f;
             _lightCamera[i].viewMatrix = lookAt(_light.position, boundCenter, vec3(0.0f, 0.0f, 1.0f));
 
-            // float light2center = distance(boundCenter, _light.position);
-            // _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f,
-            //         light2center - boundRadius, light2center + boundRadius);
-            _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 100.0f);
+            float light2center = distance(boundCenter, _light.position);
+            _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f,
+                    light2center - boundRadius, light2center + boundRadius);
+
+            _lightBound[i].makeViewVolume(_light.position,
+                                          glm::vec3(0.0f, 0.0f, 0.0f),
+                                          glm::vec3(0.0f, 1.0f, 0.0f),
+                                          viewAngle,
+                                          1.0,
+                                          light2center - boundRadius,
+                                          light2center + boundRadius);
+
+            // _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f, 0.1f, 100.0f);
         }
     }
 
@@ -467,11 +477,28 @@ public:
 		{
 			_markerShader.use();
 
-			_markerShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * glm::translate(glm::mat4(1.0f), _light.position));
+            _markerShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * glm::translate(glm::mat4(1.0f), _light.position));
             _markerShader.setVec4Uniform("color", glm::vec4(_light.diffuse, 1.0f));
-			marker.draw();
-		}
+            marker.draw();
+        }
 
+        // Рисуем bound'ы
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            static const  glm::vec4 colors[] = { glm::vec4(1.0f, 0.0f, 0.0f, 0.3f),
+                                                 glm::vec4(0.0f, 1.0f, 0.0f, 0.3f),
+                                                 glm::vec4(0.0f, 0.0f, 1.0f, 0.3f),
+                                                 glm::vec4(1.0f, 1.0f, 1.0f, 0.3f) };
+            if (_showLightBounds[i])
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                _boundsShader.use();
+    			_boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix);
+                _boundsShader.setVec4Uniform("color", colors[i]);
+                _lightBound[i].draw();
+            }
+        }
 		//Отсоединяем сэмплер и шейдерную программу
 		glBindSampler(0, 0);
 		glUseProgram(0);
