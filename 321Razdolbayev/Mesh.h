@@ -34,11 +34,24 @@ public:
 			this->push_back(t);
 		}
 
+		void addVec2(const glm::vec2& v)
+		{
+			this->push_back(v.x);
+			this->push_back(v.y);
+		}
+
 		void addVec3(T x, T y, T z)
 		{
 			this->push_back(x);
 			this->push_back(y);
 			this->push_back(z);
+		}
+
+		void addVec3(const glm::vec3& v)
+		{
+			this->push_back(v.x);
+			this->push_back(v.y);
+			this->push_back(v.z);
 		}
 
 		void addVec4(T r, T g, T b, T a)
@@ -47,6 +60,14 @@ public:
 			this->push_back(g);
 			this->push_back(b);
 			this->push_back(a);
+		}
+
+		void addVec3(const glm::vec4& v)
+		{
+			this->push_back(v.x);
+			this->push_back(v.y);
+			this->push_back(v.z);
+			this->push_back(v.w);
 		}
 	};
 
@@ -82,6 +103,12 @@ public:
 	void makeCube(float size);
 
 	/**
+	Нарисовать объём обзора от model-view-projection матрицы
+	*/
+	void makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const glm::vec3& up,
+						float viewAngle, float aspect, float nearPlane, float farPlane);
+
+	/**
 	Создает квадрат из двух треугольников. Координаты в Clip Space
 	*/
 	void makeScreenAlignedQuad();
@@ -97,15 +124,18 @@ public:
 	*/
 	void loadFromFile(const std::string& filename);
 
-protected:
 	void init(GLuint aPrimitiveType,
 			  const std::vector<float>& vertices,
 			  const std::vector<float>& normals,
 			  const std::vector<float>& texcoords);
 
+	void init(GLuint aPrimitiveType,
+			  const std::vector<float>& vertices);
+
 protected:
 	GLuint _primitiveType;
 	GLuint _vao;
+	bool _inited;
 	unsigned int _numVertices;
 	glm::mat4 _modelMatrix;
 };

@@ -15,14 +15,15 @@
 Mesh::Mesh() :
 _primitiveType(GL_TRIANGLES),
 _vao(0),
-_numVertices(0)
+_numVertices(0),
+_inited(false)
 {
 }
 
 Mesh::Mesh(GLuint primType,
 		   const std::vector<float>& vertices,
 		   const std::vector<float>& normals,
-		   const std::vector<float>& texcoords) :
+		   const std::vector<float>& texcoords)
 {
 	init(primType, vertices, normals, texcoords);
 }
@@ -273,6 +274,7 @@ void Mesh::makeScreenAlignedQuad()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	glBindVertexArray(0);
+	_inited = true;
 }
 
 void Mesh::makeGroundPlane(float size, float numTiles)
@@ -310,6 +312,108 @@ void Mesh::makeGroundPlane(float size, float numTiles)
 	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 
+void Mesh::makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const glm::vec3& up,
+						  float viewAngle, float aspect, float nearPlane, float farPlane)
+{
+	using namespace glm;
+
+	Buffer<float> vertices;
+	// нормали и текстуры не нужны
+
+    vec3 uz = normalize(center - pos);
+    vec3 ux = normalize(cross(uz, up));
+    vec3 uy = cross(ux, uz);
+
+    float nearWidth = tan(viewAngle / 2.0f) * nearPlane;
+    float nearHeight = nearWidth*aspect;
+
+    float farWidth = tan(viewAngle / 2.0f) * farPlane;
+    float farHeight = farWidth*aspect;
+
+    // side planes
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+
+    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+
+    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+
+
+
+
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+
+ //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+ //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+ //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+
+ //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+ //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+ //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+
+ //    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+ //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+ //    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+
+ //    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+ //    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+ //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+
+	// vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+ //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+ //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+
+	// vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+ //    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+ //    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+
+    // // near plane
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+    // vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
+
+    // // far plane
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
+
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
+    // vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+
+    init(GL_TRIANGLES, vertices);
+}
 
 void Mesh::loadFromFile(const std::string& filename)
 {
@@ -397,22 +501,51 @@ void Mesh::init(GLuint primType,
 			  buffer.begin() + vertices.size() + normals.size());
 
 	_numVertices = vertices.size()/3;
+	_primitiveType = primType;
 
 	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
+	if (1 || !_inited)
+		glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(float), buffer.data(), GL_STATIC_DRAW);
 
 	_vao = 0;
-	glGenVertexArrays(1, &_vao);
+	if (1 || !_inited)
+		glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+	if (1 || !_inited)
+	{
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+	}
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4));
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4 * 2));
 
 	glBindVertexArray(0);
+	_inited = true;
+}
+
+void Mesh::init(GLuint primType,
+				const std::vector<float>& vertices)
+{
+	_numVertices = vertices.size()/3;
+	_primitiveType = primType;
+
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+	_vao = 0;
+	glGenVertexArrays(1, &_vao);
+	glBindVertexArray(_vao);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glBindVertexArray(0);
+	_inited = true;
 }
