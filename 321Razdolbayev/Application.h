@@ -84,6 +84,7 @@ protected:
 	GLFWwindow* _window; //Графичекое окно
 
 	CameraInfo _camera;
+	CameraInfo _mainCamera; // в режиме дебагокамеры здесь будем хранить инфу об основной
 
 	//Положение виртуальный камеры задается в сферических координат
 	double _phiAng;

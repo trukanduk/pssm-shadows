@@ -284,6 +284,10 @@ void Application::update()
 		_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLED),
 											 (float)width / height, NEAR_PLANED, FAR_PLANED);
 	else
+	{
 		_camera.projMatrix = glm::perspective(glm::radians(VIEW_ANGLE),
 											 (float)width / height, NEAR_PLANE, FAR_PLANE);
+		_mainCamera = _camera;
+	}
+
 }
