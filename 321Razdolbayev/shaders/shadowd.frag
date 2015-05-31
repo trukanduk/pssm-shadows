@@ -1,6 +1,6 @@
 #version 330
 
-const int SPLIT_NUMBER = 2;
+const int SPLIT_NUMBER = 3;
 
 uniform sampler2D diffuseTex;
 uniform sampler2DShadow shadowTex[SPLIT_NUMBER]; //Вариант 2

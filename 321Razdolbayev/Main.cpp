@@ -33,7 +33,7 @@ struct LightInfo
 class SampleApplication : public Application
 {
 public:
-    enum { SPLIT_NUMBER = 2 };
+    enum { SPLIT_NUMBER = 3 };
 
 	Mesh cube;
 	Mesh sphere;

@@ -1,6 +1,6 @@
 #version 330
 
-const int SPLIT_NUMBER = 2;
+const int SPLIT_NUMBER = 3;
 
 //стандартные матрицы для преобразования координат
 uniform mat4 modelMatrix; //из локальной в мировую
