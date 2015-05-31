@@ -104,10 +104,9 @@ public:
 	void makeCube(float size);
 
 	/**
-	Нарисовать объём обзора от model-view-projection матрицы
+	Нарисовать куб без front и back граней.
 	*/
-	void makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const glm::vec3& up,
-						float viewAngle, float aspect, float nearPlane, float farPlane);
+	void makeViewVolume();
 
 	/**
 	Создает квадрат из двух треугольников. Координаты в Clip Space

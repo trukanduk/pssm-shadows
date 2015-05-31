@@ -318,57 +318,48 @@ void Mesh::makeGroundPlane(float size, float numTiles)
 	init(GL_TRIANGLES, vertices, normals, texcoords);
 }
 
-void Mesh::makeViewVolume(const glm::vec3& pos, const glm::vec3& center, const glm::vec3& up,
-						  float viewAngle, float aspect, float nearPlane, float farPlane)
+void Mesh::makeViewVolume()
 {
 	using namespace glm;
 
 	Buffer<float> vertices;
 	// текстуры не нужны
 
-    vec3 uz = normalize(center - pos);
-    vec3 ux = normalize(cross(uz, up));
-    vec3 uy = cross(ux, uz);
+   	//front
+	vertices.addVec3(1.0f, -1.0f, 1.0f);
+	vertices.addVec3(1.0f, 1.0f, 1.0f);
+	vertices.addVec3(1.0f, 1.0f, 0.0f);
 
-    float nearWidth = tan(viewAngle / 2.0f) * nearPlane;
-    float nearHeight = nearWidth*aspect;
+	vertices.addVec3(1.0f, -1.0f, 1.0f);
+	vertices.addVec3(1.0f, 1.0f, 0.0f);
+	vertices.addVec3(1.0f, -1.0f, 0.0f);
 
-    float farWidth = tan(viewAngle / 2.0f) * farPlane;
-    float farHeight = farWidth*aspect;
+	//left
+	vertices.addVec3(-1.0f, -1.0f, 1.0f);
+	vertices.addVec3(1.0f, -1.0f, 1.0f);
+	vertices.addVec3(1.0f, -1.0f, 0.0f);
 
-    // side planes
-    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
+	vertices.addVec3(-1.0f, -1.0f, 1.0f);
+	vertices.addVec3(1.0f, -1.0f, 0.0f);
+	vertices.addVec3(-1.0f, -1.0f, 0.0f);
 
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
+	//back 1
+	vertices.addVec3(-1.0f, -1.0f, 1.0f);
+	vertices.addVec3(-1.0f, 1.0f, 0.0f);
+	vertices.addVec3(-1.0f, 1.0f, 1.0f);
 
-    vertices.addVec3(pos + uz*farPlane - ux*farWidth + uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
+	vertices.addVec3(-1.0f, -1.0f, 1.0f);
+	vertices.addVec3(-1.0f, -1.0f, 0.0f);
+	vertices.addVec3(-1.0f, 1.0f, 0.0f);
 
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
+	//right 1
+	vertices.addVec3(-1.0f, 1.0f, 1.0f);
+	vertices.addVec3(1.0f, 1.0f, 0.0f);
+	vertices.addVec3(1.0f, 1.0f, 1.0f);
 
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth + uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-
-    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth + uy*nearHeight);
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
-
-    vertices.addVec3(pos + uz*farPlane - ux*farWidth - uy*farHeight);
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-
-    vertices.addVec3(pos + uz*farPlane + ux*farWidth - uy*farHeight);
-    vertices.addVec3(pos + uz*nearPlane - ux*nearWidth - uy*nearHeight);
-    vertices.addVec3(pos + uz*nearPlane + ux*nearWidth - uy*nearHeight);
-
+	vertices.addVec3(-1.0f, 1.0f, 1.0f);
+	vertices.addVec3(-1.0f, 1.0f, 0.0f);
+	vertices.addVec3(+1.0f, 1.0f, 0.0f);
 
     init(GL_TRIANGLES, vertices);
 }
@@ -462,21 +453,16 @@ void Mesh::init(GLuint primType,
 	_primitiveType = primType;
 
 	GLuint vbo = 0;
-	if (1 || !_inited)
-		glGenBuffers(1, &vbo);
+	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(float), buffer.data(), GL_STATIC_DRAW);
 
 	_vao = 0;
-	if (1 || !_inited)
-		glGenVertexArrays(1, &_vao);
+	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
-	if (1 || !_inited)
-	{
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
-	}
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(_numVertices * 3 * 4));

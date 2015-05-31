@@ -44,7 +44,7 @@ void main()
 		if (shadowCoords.x >= 0.0 && shadowCoords.x <= 1.0 &&
 			shadowCoords.y >= 0.0 && shadowCoords.y <= 1.0)
 		{
-			visibility = textureProj(shadowTex[i], shadowTexCoords.coord[i]); //глубина ближайшего фрагмента в пространстве источника света
+			visibility = textureProj(shadowTex[i], shadowTexCoords.coord[i], 1.0); //глубина ближайшего фрагмента в пространстве источника света
 
 			break;
 		}

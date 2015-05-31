@@ -63,7 +63,8 @@ public:
 
 	LightInfo _light;
     CameraInfo _lightCamera[SPLIT_NUMBER];
-    Mesh _lightBound[SPLIT_NUMBER]; // Меши для отображения формы и расположения камер
+    Mesh _viewBound; // Меши для отображения формы и расположения камер
+    glm::mat4 _lightBoundTransform[SPLIT_NUMBER];
 
 	GLuint _worldTexId;
 	GLuint _brickTexId;
@@ -228,7 +229,10 @@ public:
         glSamplerParameteri(_depthSamplerLinear, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
         glSamplerParameteri(_depthSamplerLinear, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
-
+        for (int i = 0; i < SPLIT_NUMBER; ++i)
+        {
+            _viewBound.makeViewVolume();
+        }
         //=========================================================
         //Инициализация фреймбуфера для рендера теневой карты
 
@@ -366,14 +370,7 @@ public:
             _lightCamera[i].projMatrix = perspective(viewAngle, 1.0f,
                     light2center - boundRadius, light2center + boundRadius);
 
-            _lightBound[i].makeViewVolume(_light.position,
-                                          boundCenter,
-                                          glm::vec3(0.0f, 1.0f, 0.0f),
-                                          viewAngle,
-                                          1.0,
-                                          light2center - boundRadius,
-                                          light2center + boundRadius);
-            // _lightBound[i].makeSphere(boundRadius, boundCenter);
+            _lightBoundTransform[i] = inverse(_lightCamera[i].projMatrix * _lightCamera[i].viewMatrix);
         }
     }
 
@@ -493,10 +490,23 @@ public:
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 _boundsShader.use();
-    			_boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix);
+                _boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * _lightBoundTransform[i]);
                 _boundsShader.setVec4Uniform("color", colors[i]);
-                _lightBound[i].draw();
+                _viewBound.draw();
+                glDisable(GL_BLEND);
             }
+        }
+
+        if (_useDebugCamera)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glm::mat4 vmat = glm::inverse(_mainCamera.projMatrix * _mainCamera.viewMatrix);
+            _boundsShader.use();
+            _boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * vmat);
+            _boundsShader.setVec4Uniform("color", glm::vec4(1.0, 1.0, 1.0, 0.3));
+            _viewBound.draw();
+            glDisable(GL_BLEND);
         }
 		//Отсоединяем сэмплер и шейдерную программу
 		glBindSampler(0, 0);
