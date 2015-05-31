@@ -8,11 +8,11 @@
 //======================================
 
 const float Application::NEAR_PLANE = 0.1f;
-const float Application::FAR_PLANE = 30.0f;
+const float Application::FAR_PLANE = 100.0f;
 const float Application::VIEW_ANGLE = 45.0f;
 
 const float Application::NEAR_PLANED = 0.1f;
-const float Application::FAR_PLANED = 100.0f;
+const float Application::FAR_PLANED = 150.0f;
 const float Application::VIEW_ANGLED = 45.0f;
 
 //Функция обратного вызова для обработки нажатий на клавиатуре
