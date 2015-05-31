@@ -21,13 +21,6 @@ SET(SHADER_FILES
 	shaders/marker.vert
 	shaders/marker.frag
 
-	# shaders 6
-	shaders/common.vert
-	shaders/common.frag
-
-	shaders/skybox.vert
-	shaders/skybox.frag
-
 	# shaders 7
 	shaders/quadDepth.vert
 	shaders/quadDepth.frag
@@ -40,12 +33,6 @@ SET(SHADER_FILES
 	shaders/shadow.frag
 	shaders/shadow2.frag
 	shaders/shadowd.frag
-
-	shaders/togbuffer.vert
-	shaders/togbuffer.frag
-
-	shaders/deferred.vert
-	shaders/deferred.frag
 )
 
 SOURCE_GROUP("Shaders" FILES

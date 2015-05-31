@@ -46,15 +46,12 @@ public:
 	Mesh marker; //Меш - маркер для источника света
 
 	//Идентификатор шейдерной программы
-	ShaderProgram _commonShader;
 	ShaderProgram _markerShader;
-	ShaderProgram _skyboxShader;
 	ShaderProgram _quadShader;
     ShaderProgram _renderToShadowMapShader;
     ShaderProgram _commonWithShadowsShader;
     ShaderProgram _commonWithShadowsShaderVar2;
     ShaderProgram _debugShader;
-    ShaderProgram _boundsShader;
 
 	//Переменные для управления положением одного источника света
 	float _lr;
@@ -161,14 +158,11 @@ public:
 		//=========================================================
 		//Инициализация шейдеров
 
-		_commonShader.createProgram("shaders/common.vert", "shaders/common.frag");
 		_markerShader.createProgram("shaders/marker.vert", "shaders/marker.frag");
-		_skyboxShader.createProgram("shaders/skybox.vert", "shaders/skybox.frag");
 		_quadShader.createProgram("shaders/quadDepth.vert", "shaders/quadDepth.frag");
         _renderToShadowMapShader.createProgram("shaders/toshadow.vert", "shaders/toshadow.frag");
         _commonWithShadowsShader.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
         _debugShader.createProgram("shaders/shadow.vert", "shaders/shadowd.frag");
-        _boundsShader.createProgram("shaders/marker.vert", "shaders/marker.frag");
 
         // :TODO: fix shader2.frag shader
         _commonWithShadowsShaderVar2.createProgram("shaders/shadow.vert", "shaders/shadow.frag");
@@ -489,9 +483,9 @@ public:
             {
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                _boundsShader.use();
-                _boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * _lightBoundTransform[i]);
-                _boundsShader.setVec4Uniform("color", colors[i]);
+                _markerShader.use();
+                _markerShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * _lightBoundTransform[i]);
+                _markerShader.setVec4Uniform("color", colors[i]);
                 _viewBound.draw();
                 glDisable(GL_BLEND);
             }
@@ -502,9 +496,9 @@ public:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glm::mat4 vmat = glm::inverse(_mainCamera.projMatrix * _mainCamera.viewMatrix);
-            _boundsShader.use();
-            _boundsShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * vmat);
-            _boundsShader.setVec4Uniform("color", glm::vec4(1.0, 1.0, 1.0, 0.3));
+            _markerShader.use();
+            _markerShader.setMat4Uniform("mvpMatrix", camera.projMatrix * camera.viewMatrix * vmat);
+            _markerShader.setVec4Uniform("color", glm::vec4(1.0, 1.0, 1.0, 0.3));
             _viewBound.draw();
             glDisable(GL_BLEND);
         }
