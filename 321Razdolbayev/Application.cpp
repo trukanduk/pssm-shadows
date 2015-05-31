@@ -49,7 +49,7 @@ Application::Application():
 _oldTime(0.0),
 	_rotateLeft(false),
 	_rotateRight(false),
-	_phiAng(0.0),
+	_phiAng(std::acos(0)),
 	_rotateUp(false),
 	_rotateDown(false),
 	_thetaAng(0.0),
